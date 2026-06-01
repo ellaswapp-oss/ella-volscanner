@@ -1,0 +1,22 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "cwd": "/Users/jaredjohnson/Documents/Claude Playground/DailyReturns/vol-dashboard/frontend"
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "/Users/jaredjohnson/Documents/Claude Playground/DailyReturns/vol-dashboard/backend/.venv/bin/uvicorn",
+      "runtimeArgs": ["app.main:app", "--reload"],
+      "port": 8000,
+      "cwd": "/Users/jaredjohnson/Documents/Claude Playground/DailyReturns/vol-dashboard/backend",
+      "env": {
+        "DATA_PROVIDER": "real"
+      }
+    }
+  ]
+}
