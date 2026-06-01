@@ -37,3 +37,8 @@ backend/data/*.sqlite3
 # IDE
 .idea/
 .vscode/
+
+# Claude Code — ignore local-only settings, keep shared config tracked
+# Tracked: CLAUDE.md, .claude/agents/, .claude/commands/, .claude/launch.json, etc.
+.claude/settings.local.json
+.claude/*.local.*
