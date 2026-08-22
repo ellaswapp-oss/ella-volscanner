@@ -676,9 +676,15 @@ export default function ScannerHistoryPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
-          <Link href="/scanner/sp500" className="text-zinc-500 text-sm hover:text-zinc-300 transition-colors mb-2 inline-block">
-            ← Scanner
-          </Link>
+          <div className="flex items-center gap-3 mb-2">
+            <Link href="/" className="text-zinc-500 text-sm hover:text-zinc-300 transition-colors">
+              ← Dashboard
+            </Link>
+            <span className="text-zinc-700">/</span>
+            <Link href="/scanner/sp500" className="text-zinc-500 text-sm hover:text-zinc-300 transition-colors">
+              Scanner
+            </Link>
+          </div>
           <h1 className="text-2xl font-bold text-zinc-100">Signal Journal</h1>
           <p className="text-zinc-500 text-sm mt-1">
             Historical record of every scanner signal · click any signal row to review &amp; annotate
