@@ -159,6 +159,12 @@ export default function DashboardPage() {
             disabled={tickerLoading}
           />
           <Link
+            href="/scanner/sp500"
+            className="shrink-0 rounded-full bg-surface-3 border border-border px-3 py-1 text-xs font-medium text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors"
+          >
+            Scanner →
+          </Link>
+          <Link
             href="/backtest"
             className="shrink-0 rounded-full bg-surface-3 border border-border px-3 py-1 text-xs font-medium text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors"
           >
