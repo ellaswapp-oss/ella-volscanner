@@ -124,6 +124,19 @@ def _options_cache_path(ticker: str, date: datetime.date) -> pathlib.Path:
     return _OPTIONS_CACHE / f"{ticker.upper()}_{date}.json"
 
 
+# Same thresholds used as backtest defaults (see api/backtest.py vix_low/
+# vix_elevated/vix_spike query params) — kept in sync for a consistent story
+# between the live dashboard's VIX regime label and the backtest engine.
+def _classify_vix_regime(vix: float) -> str:
+    if vix < 15.0:
+        return "Low"
+    if vix < 20.0:
+        return "Normal"
+    if vix < 35.0:
+        return "Elevated"
+    return "Extreme"
+
+
 # ---------------------------------------------------------------------------
 # RealDataProvider
 # ---------------------------------------------------------------------------
@@ -946,7 +959,47 @@ class RealDataProvider(VolDataProvider):
         )
 
     def get_macro_snapshot(self) -> dict:
-        raise NotImplementedError(
-            "Macro snapshot not yet implemented. "
-            "Set FRED_API_KEY (and optionally POLYGON_API_KEY) in backend/.env."
-        )
+        """
+        Current-day macro snapshot (VIX, credit spread, yield curve, financial conditions).
+
+        Reuses the same CBOE/FRED sources as get_macro_series(), plus two
+        additional FRED series (DGS2, NFCI) fetched over a short trailing
+        window so the 10Y-2Y curve and financial-conditions index can be
+        computed for "today". All fetches go through the same disk cache as
+        get_macro_series(), so repeat calls within a day cost nothing extra.
+
+        Raises
+        ------
+        ValueError
+            FRED_API_KEY is not set, or a required series returned no data.
+        RuntimeError
+            A network or server error occurred.
+        """
+        fred_key = os.environ.get("FRED_API_KEY", "").strip()
+        if not fred_key:
+            raise ValueError(
+                "FRED_API_KEY is not set. "
+                "Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html "
+                "and add it to backend/.env."
+            )
+
+        end   = datetime.date.today()
+        start = end - datetime.timedelta(days=15)  # survives weekends/holidays
+
+        vix1m         = self._fetch_cboe_vix("VIX", start, end)
+        us10y         = self._fetch_fred_series("DGS10",        start, end, fred_key)
+        us2y          = self._fetch_fred_series("DGS2",         start, end, fred_key)
+        credit_spread = self._fetch_fred_series("BAMLH0A0HYM2", start, end, fred_key)
+        nfci          = self._fetch_fred_series("NFCI",         start, end, fred_key)
+
+        vix_latest = float(vix1m.dropna().iloc[-1])
+
+        return {
+            "vix":                  round(vix_latest, 2),
+            "vix_regime":           _classify_vix_regime(vix_latest),
+            "credit_spread":        round(float(credit_spread.dropna().iloc[-1]), 2),
+            "yield_curve":          round(
+                float(us10y.dropna().iloc[-1]) - float(us2y.dropna().iloc[-1]), 2
+            ),
+            "financial_conditions": round(float(nfci.dropna().iloc[-1]), 2),
+        }

@@ -89,7 +89,9 @@ def _compute_macro_penalties(provider) -> dict:
 
     available      bool       True unless the macro series fetch itself failed.
     macro_status   str        "available" | "partial" | "unavailable"
-    total_penalty  float|None Penalty points; None when status is "unavailable".
+    total_penalty  float      Penalty points; 0.0 when status is "unavailable"
+                               (no penalty applied — never None, so callers can
+                               always subtract it from the raw regime score).
     reasons        list[str]  Human-readable penalty reasons (empty = regime clear).
     missing_fields list[str]  Fields that could not be computed.
 
@@ -106,7 +108,7 @@ def _compute_macro_penalties(provider) -> dict:
     except Exception as exc:
         logger.warning("Macro data unavailable for penalty calc: %s", exc)
         return {
-            "total_penalty":  None,
+            "total_penalty":  0.0,
             "reasons":        [],
             "available":      False,
             "macro_status":   "unavailable",
@@ -171,7 +173,7 @@ def _compute_macro_penalties(provider) -> dict:
         # Every field failed — treat as fully unavailable
         macro_status  = "unavailable"
         available     = False
-        total_penalty: float | None = None
+        total_penalty: float = 0.0
     elif missing:
         macro_status  = "partial"
         available     = True
